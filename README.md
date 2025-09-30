@@ -4,12 +4,12 @@ This repository contains a lightweight HTTP service that exposes a Server-Sent E
 
 ## Architecture overview
 
-The service exposes two HTTP endpoints:
+The service exposes a single MCP endpoint that supports both `GET` and `POST`:
 
-- `GET /api/stream?client_id=...` — establishes the SSE channel that the MCP client listens to. Responses from Chatmi are emitted as SSE events.
-- `POST /api/message` — accepts MCP JSON RPC payloads from the client and forwards them to Chatmi. The body must contain a `client_id` string and a `message` object (the MCP payload).
+- `GET /api/mcp?client_id=...` — establishes the SSE channel that the MCP client listens to. Responses from Chatmi are emitted as SSE events. If the `client_id` is omitted, the bridge will generate one and return it in the `Mcp-Session-Id` response header.
+- `POST /api/mcp` — accepts MCP JSON RPC payloads from the client and forwards them to Chatmi. The request **must** include the same client identifier that was used to open the SSE stream. You can supply it via the `Mcp-Session-Id` header, the `client_id` query parameter, or (for backwards compatibility) the legacy `{ client_id, message }` JSON structure used by earlier versions of this proxy.
 
-When `/api/message` is called, the service serialises the MCP payload into a string that Chatmi understands, sends it to Chatmi via the webhook, parses the synchronous response, and pushes every returned event to the SSE stream of the matching `client_id`.
+When a request reaches `/api/mcp`, the service serialises the MCP payload into a string that Chatmi understands, sends it to Chatmi via the webhook, parses the synchronous response, and pushes every returned event to the SSE stream of the matching client.
 
 ## Chatmi message formats
 
@@ -27,7 +27,7 @@ Chatmi communicates purely through JSON strings. The bridge always sends and rec
 }
 ```
 
-- `<CLIENT_ID>` — the value supplied in the `client_id` field when calling `/api/message`.
+- `<CLIENT_ID>` — the identifier supplied when connecting to `/api/mcp` (either explicitly or via the generated `Mcp-Session-Id`).
 - `<MCP_JSON_RPC_OBJECT>` — the exact JSON payload received from the MCP client (for example, an `initialize` request or a `call_tool` notification).
 
 The entire structure above is serialised with `JSON.stringify` and provided to Chatmi in the `text` field of the webhook call.
@@ -79,7 +79,20 @@ data: <payload serialized with JSON.stringify>
    npm run dev
    ```
 
-4. Connect your MCP client to `http://localhost:3000/api/stream?client_id=<YOUR_ID>` and POST messages to `http://localhost:3000/api/message`.
+4. Connect your MCP client to `http://localhost:3000/api/mcp?client_id=<YOUR_ID>` (or read the generated value from the `Mcp-Session-Id` header) and POST messages to the same URL.
+
+### Smoke-test the proxy from the command line
+
+The repository includes a very small CLI that emulates the behaviour of an MCP client. It opens an SSE stream and immediately sends an MCP JSON-RPC payload to the same endpoint, which is helpful for verifying a deployed bridge end-to-end without relying on n8n.
+
+```bash
+npm install
+node scripts/mcp-client.js --endpoint https://mcp-webim.vercel.app/api/mcp \
+  --message '{"jsonrpc":"2.0","id":"initialize","method":"initialize","params":{"capabilities":{}}}' \
+  --duration 5000
+```
+
+The CLI will log the SSE events that arrive from Chatmi. You can provide your own `--client` identifier (otherwise one is generated), replace `--message` with any MCP JSON-RPC request your client expects to send, pass `--duration` to stop listening after a given number of milliseconds, and use `--events` to subscribe to additional SSE event names (for example, `tool-call`).
 
 ## Deployment to Vercel
 
