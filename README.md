@@ -81,18 +81,6 @@ data: <payload serialized with JSON.stringify>
 
 4. Connect your MCP client to `http://localhost:3000/api/mcp?client_id=<YOUR_ID>` (or read the generated value from the `Mcp-Session-Id` header) and POST messages to the same URL.
 
-### Smoke-test the proxy from the command line
-
-The repository includes a very small CLI that emulates the behaviour of an MCP client. It opens an SSE stream and immediately sends an MCP JSON-RPC payload to the same endpoint, which is helpful for verifying a deployed bridge end-to-end without relying on n8n.
-
-```bash
-npm install
-node scripts/mcp-client.js --endpoint https://mcp-webim.vercel.app/api/mcp \
-  --message '{"jsonrpc":"2.0","id":"initialize","method":"initialize","params":{"capabilities":{}}}' \
-  --duration 5000
-```
-
-The CLI will log the SSE events that arrive from Chatmi. You can provide your own `--client` identifier (otherwise one is generated), replace `--message` with any MCP JSON-RPC request your client expects to send, pass `--duration` to stop listening after a given number of milliseconds, and use `--events` to subscribe to additional SSE event names (for example, `tool-call`).
 
 ## Deployment to Vercel
 
