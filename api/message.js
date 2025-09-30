@@ -55,6 +55,7 @@ module.exports = async function handler(req, res) {
 
   const chatmiInput = buildChatmiInput({ clientId, message });
 
+
   let chatmiResponse;
   try {
     const response = await fetch(CHATMI_WEBHOOK_URL, {
