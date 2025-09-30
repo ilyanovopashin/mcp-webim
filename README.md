@@ -17,7 +17,6 @@ Chatmi communicates purely through JSON strings. The bridge always sends and rec
 
 ### Input string sent to Chatmi
 
-The bridge serialises the MCP payload to a JSON **string** before forwarding it to Chatmi. The object that gets stringified looks like this:
 
 ```
 {
@@ -32,15 +31,7 @@ The bridge serialises the MCP payload to a JSON **string** before forwarding it 
 - `<CLIENT_ID>` — the value supplied in the `client_id` field when calling `/api/message`.
 - `<MCP_JSON_RPC_OBJECT>` — the exact JSON payload received from the MCP client (for example, an `initialize` request or a `call_tool` notification).
 
-When embedded into the webhook request, the resulting `text` field is a quoted JSON string, e.g.:
 
-```json
-{
-  "event": "new_message",
-  "chat": { "id": "test" },
-  "text": "{\"version\":\"0.1.0\",\"client\":{\"id\":\"test\"},\"message\":{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}}"
-}
-```
 
 ### Output string returned by Chatmi
 
@@ -65,19 +56,6 @@ Chatmi must reply with an operator message whose `text` field contains a JSON st
 - `<CLIENT_ID>` must match the identifier from the request.
 - Every element inside `events` represents one message that will be emitted over SSE. The `name` field is optional; if omitted, the bridge falls back to `message`. The `payload` can contain any JSON-serialisable object that the MCP client expects.
 
-An example Chatmi synchronous response looks like:
-
-```json
-{
-  "has_answer": true,
-  "messages": [
-    {
-      "kind": "operator",
-      "text": "{\"version\":\"0.1.0\",\"client\":{\"id\":\"test\"},\"events\":[{\"name\":\"message\",\"payload\":{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"ready\":true}}}]}"
-    }
-  ]
-}
-```
 
 Each event is emitted as:
 

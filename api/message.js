@@ -54,11 +54,7 @@ module.exports = async function handler(req, res) {
   }
 
   const chatmiInput = buildChatmiInput({ clientId, message });
-  if (typeof chatmiInput !== 'string') {
-    res.statusCode = 500;
-    res.end(JSON.stringify({ error: 'Failed to serialise payload for Chatmi' }));
-    return;
-  }
+
 
   let chatmiResponse;
   try {
