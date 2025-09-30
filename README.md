@@ -81,6 +81,7 @@ data: <payload serialized with JSON.stringify>
 
 4. Connect your MCP client to `http://localhost:3000/api/mcp?client_id=<YOUR_ID>` (or read the generated value from the `Mcp-Session-Id` header) and POST messages to the same URL.
 
+
 ## Deployment to Vercel
 
 1. Ensure the `CHATMI_WEBHOOK_URL` environment variable is configured in the Vercel project if the default value should be overridden.
